@@ -22,7 +22,7 @@
 
 ## 体验
 
-- 演示地址：http://www.coresite.com
+- 演示地址：http://www.coresite.cn
 
 ## 开发团队
 
@@ -34,6 +34,6 @@
 
 ## 特别鸣谢
 
-- [ThinkPHP](https://github.com/top-think/think)
+- [ThinkPHP](https://github.com/top-think)
 - [ArcoDesign](https://github.com/arco-design)
-- [vue3](https://github.com/vuejs)
+- [vue](https://github.com/vuejs)

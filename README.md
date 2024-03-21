@@ -22,7 +22,7 @@ CORESITE is an open-source system for online communication, collaboration, and s
 
 ## Experience
 
-- website: http://www.coresite.com
+- website: http://www.coresite.cn
 
 ## Development team
 
@@ -34,6 +34,6 @@ CORESITE is an open-source system for online communication, collaboration, and s
 
 ## Special Thanks
 
-- [ThinkPHP](https://github.com/top-think/think)
+- [ThinkPHP](https://github.com/top-think)
 - [ArcoDesign](https://github.com/arco-design)
-- [vue3](https://github.com/vuejs)
+- [vue](https://github.com/vuejs)
