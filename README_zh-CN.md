@@ -2,7 +2,7 @@
 
 `version: beta1.0`
 
-[英文版](README.md)
+[英文版](./README.md)
 
 ## 介绍
 

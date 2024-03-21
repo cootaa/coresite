@@ -2,7 +2,7 @@
 
 `version: beta1.0`
 
-[Chinese](README_zh_CN.md)
+[Chinese](./README_zh_CN.md)
 
 ## Introduction
 
