@@ -1,6 +1,6 @@
 # CORESITE
 
-`version: beta1.0`
+version: `beta1.0`
 
 [中文版](./README_zh-CN.md)
 

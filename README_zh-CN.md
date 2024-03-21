@@ -1,6 +1,6 @@
 # 心界
 
-`version: beta1.0`
+版本: `beta1.0`
 
 [English Version](./README.md)
 
