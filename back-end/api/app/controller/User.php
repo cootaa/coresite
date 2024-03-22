@@ -122,13 +122,13 @@ class User extends BaseController
         $avatarFormat = '.png';
         $avatarIndex = mt_rand(1, 30); // 生成1到30之间的随机数
         $avatarDefaultUrl = $avatarBaseUrl . $avatarIndex . $avatarFormat;
-
+        $setting = Env::get('USER_SETTING');
         $data = UserModel::create([
             'username' => $username,
             'password' => md5($password),
             'nickname' => $nickname,
             'create_time' => time(),
-            'setting' => 'en-US/Light/Indent/0.35',
+            'setting' => $setting,
             'avatar' => $avatarDefaultUrl // 将生成的默认头像URL存入avatar字段
         ]);
 

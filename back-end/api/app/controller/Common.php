@@ -14,6 +14,7 @@ use app\model\Folder as FolderModel;
 use app\model\ProjectUser as ProjectUserModel;
 use app\model\User as UserModel;
 use think\facade\Cache;
+use think\facade\Env;
 use think\facade\Request;
 use OSS\Core\OssException;
 use OSS\OssClient;
@@ -29,17 +30,33 @@ class Common extends BaseController
 
     /**
      * 阿里云OSS配置
-     */
-    const accessKeyId = 'LTAI5t9dK5KjeDAib9G5Vbdh';
-    const accessKeySecret = '8dLKrnaWCRcpTLCqXNlxkcN5uUj03K';
-    const endpoint = 'oss-cn-hangzhou.aliyuncs.com';
-    const bucket = 'cota-coresite';
+     *
+     **/
+    private static $accessKeyId;
+    private static $accessKeySecret;
+    private static $endpoint;
+    private static $bucket;
 
     /**
      * JWT配置
      */
     const key = 'JWT-key@CoreSite';
     const expTime = 7200;
+
+    public function __construct()
+    {
+        $this->setConstants();
+    }
+
+
+    private function setConstants()
+    {
+        self::$accessKeyId = Env::get('ALIYUN_OOS.ACCESSKEYID');
+        self::$accessKeySecret = Env::get('ALIYUN_OOS.ACCESSKEYSCECRET');
+        self::$endpoint = Env::get('ALIYUN_OOS.ENDPOINT');
+        self::$bucket = Env::get('ALIYUN_OOS.BUCKET');
+    }
+
 
     /**
      *文件重复和覆盖状态码
@@ -70,9 +87,9 @@ class Common extends BaseController
         $object = 'avatar/' . $year . '/' . $month . '/' . $genFileName; // 新文件存放完整路径
 
         try {
-            $ossClient = new OssClient(self::accessKeyId, self::accessKeySecret, self::endpoint);
+            $ossClient = new OssClient(self::$accessKeyId, self::$accessKeySecret, self::$endpoint);
 
-            $result = $ossClient->uploadFile(self::bucket, $object, $filePath);
+            $result = $ossClient->uploadFile(self::$bucket, $object, $filePath);
             if (!$result) {
                 return $this->exception(setLang('UploadError'));
             } else {
@@ -105,15 +122,14 @@ class Common extends BaseController
         $filename = pathinfo($name, PATHINFO_FILENAME);
         $size = $files['size']; // 文件大小
         $type = $files['type']; // 文件类型
-
         $format = strrchr($name, '.'); // 截取文件后缀名
         $filePath = $files['tmp_name']; // 本地文件临时路径
         $genFileName = sha1(date('YmdHis', time()) . uniqid()) . $format; // 新文件名构造
         $object = 'group/' . $groupId . '/' . $projectId . '/' . $genFileName; // 新文件存放完整路径
         try {
-            $ossClient = new OssClient(self::accessKeyId, self::accessKeySecret, self::endpoint);
+            $ossClient = new OssClient(self::$accessKeyId, self::$accessKeySecret, self::$endpoint);
             $this->checkUserMemory($token);
-            $result = $ossClient->uploadFile(self::bucket, $object, $filePath);
+            $result = $ossClient->uploadFile(self::$bucket, $object, $filePath);
 
             if (!$result) {
                 return $this->exception(setLang('UploadError'));
@@ -176,7 +192,7 @@ class Common extends BaseController
             $decoded = JWT::decode($jwt, new Key(self::key, 'HS256')); //HS256方式，这里要和签发的时候对应
             $arr = (array)$decoded;
             $returndata['code'] = "200";
-            $returndata['msg'] =setLang('SUCCESS');
+            $returndata['msg'] = setLang('SUCCESS');
             $returndata['data'] = $arr;
             return json_encode($returndata, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
         } catch (\Firebase\JWT\SignatureInvalidException $e) {
