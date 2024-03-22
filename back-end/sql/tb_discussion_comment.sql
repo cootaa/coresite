@@ -1,0 +1,14 @@
+INSERT INTO `tb_discussion_comment` (`id`, `discussion_id`, `user_id`, `comment`, `status`, `create_time`, `delete_time`) VALUES (13, 13, 2, '头像重复了\n', 1, 1710932002, NULL);
+INSERT INTO `tb_discussion_comment` (`id`, `discussion_id`, `user_id`, `comment`, `status`, `create_time`, `delete_time`) VALUES (14, 13, 2, '大模型对话', 1, 1710932822, NULL);
+INSERT INTO `tb_discussion_comment` (`id`, `discussion_id`, `user_id`, `comment`, `status`, `create_time`, `delete_time`) VALUES (15, 13, 2, '<p>abc</p>', 1, 1710932834, NULL);
+INSERT INTO `tb_discussion_comment` (`id`, `discussion_id`, `user_id`, `comment`, `status`, `create_time`, `delete_time`) VALUES (16, 1, 49, '你好', 1, 1710932834, NULL);
+INSERT INTO `tb_discussion_comment` (`id`, `discussion_id`, `user_id`, `comment`, `status`, `create_time`, `delete_time`) VALUES (17, 12, 5, '123123123123123123', 1, 1711001425, NULL);
+INSERT INTO `tb_discussion_comment` (`id`, `discussion_id`, `user_id`, `comment`, `status`, `create_time`, `delete_time`) VALUES (18, 12, 49, '12341', 1, 1711001440, NULL);
+INSERT INTO `tb_discussion_comment` (`id`, `discussion_id`, `user_id`, `comment`, `status`, `create_time`, `delete_time`) VALUES (19, 16, 2, 'asdfsadf', 1, 1711001915, NULL);
+INSERT INTO `tb_discussion_comment` (`id`, `discussion_id`, `user_id`, `comment`, `status`, `create_time`, `delete_time`) VALUES (20, 16, 2, 'df', 1, 1711001919, NULL);
+INSERT INTO `tb_discussion_comment` (`id`, `discussion_id`, `user_id`, `comment`, `status`, `create_time`, `delete_time`) VALUES (21, 16, 2, 'ab', 1, 1711001926, NULL);
+INSERT INTO `tb_discussion_comment` (`id`, `discussion_id`, `user_id`, `comment`, `status`, `create_time`, `delete_time`) VALUES (22, 16, 2, '测试', 1, 1711001943, NULL);
+INSERT INTO `tb_discussion_comment` (`id`, `discussion_id`, `user_id`, `comment`, `status`, `create_time`, `delete_time`) VALUES (23, 13, 49, '头像测试', 1, 1711004229, NULL);
+INSERT INTO `tb_discussion_comment` (`id`, `discussion_id`, `user_id`, `comment`, `status`, `create_time`, `delete_time`) VALUES (24, 17, 1, 'ok i c u', 1, 1711017521, NULL);
+INSERT INTO `tb_discussion_comment` (`id`, `discussion_id`, `user_id`, `comment`, `status`, `create_time`, `delete_time`) VALUES (25, 17, 2, '还没写完，待更！', 1, 1711027352, NULL);
+INSERT INTO `tb_discussion_comment` (`id`, `discussion_id`, `user_id`, `comment`, `status`, `create_time`, `delete_time`) VALUES (26, 16, 1, 'happy BD', 1, 1711027601, NULL);
