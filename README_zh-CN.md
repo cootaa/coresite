@@ -30,7 +30,7 @@
 
 ## 开源协议
 
-[MIT](https://github.com/cootaa/coresite/LICENSE) © 心界团队
+[MIT](./LICENSE) © 心界团队
 
 ## 特别鸣谢
 

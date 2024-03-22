@@ -30,7 +30,7 @@ CORESITE is an open-source system for online communication, collaboration, and s
 
 ## Open source protocol
 
-[MIT](https://github.com/cootaa/coresite/LICENSE) © CORESITE Team
+[MIT](./LICENSE) © CORESITE Team
 
 ## Special Thanks
 
