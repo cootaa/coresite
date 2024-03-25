@@ -9,7 +9,6 @@
 
 
 namespace app\controller;
-
 use app\BaseController;
 use think\facade\Request;
 use app\model\Chat as ChatModel;
@@ -28,7 +27,6 @@ class Chat extends BaseController
      * @param int $userId //用户id
      * @param string $message //单条聊天内容
      * @return array
-     *
      */
     public function save()
     {
@@ -43,9 +41,8 @@ class Chat extends BaseController
         try {
             Common::checkByTokenUid($token, $userId);
             validate(ChatValidate::class)->scene('save')->check($param);
-
         } catch (\Exception $e) {
-            return $this->exception($e->getMessage());
+            return $this->Catchexception($e->getCode(),$e->getMessage());
         }
 
         $project = ProjectModel::where('id', $projectId)->find();
@@ -75,8 +72,6 @@ class Chat extends BaseController
      * @param string $nickName //消息人
      * @param string $message //消息
      * @param int $userId //用户id
-     *
-     *
      * @return array
      *
      */
@@ -89,7 +84,7 @@ class Chat extends BaseController
         try {
             Common::checkByTokenUid($token, $userId);
         } catch (\Exception $e) {
-            return $this->exception($e->getMessage());
+            return $this->Catchexception($e->getCode(),$e->getMessage());
         }
 
         $page = input('get.page') ?? '1';

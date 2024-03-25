@@ -43,7 +43,7 @@ class Group extends BaseController
             Common::checkByTokenUid($token, $creatorId);
             validate(GroupValidate::class)->scene('create')->check($param);
         } catch (\Exception $e) {
-            return $this->exception($e->getMessage());
+            return $this->Catchexception($e->getCode(), $e->getMessage());
         }
 
         $group = GroupModel::where(['name' => $name, 'creator_id' => $creatorId])->find();
@@ -84,10 +84,20 @@ class Group extends BaseController
      */
     public function list()
     {
+        $header = Request::header();
+
+        $token = $header['token'];
         $page = input('get.page') ?? '1';
         $size = input('get.size') ?? '10';
         $groupName = input('get.group_name') ?? '';
         $userId = input('get.user_id') ?? '';
+
+        try {
+            Common::checkByTokenUid($token, $userId);
+
+        } catch (\Exception $e) {
+            return $this->Catchexception($e->getCode(), $e->getMessage());
+        }
 
         $where = [];
         if ($groupName != '') {
@@ -100,7 +110,6 @@ class Group extends BaseController
                 $query->where('gu.user_id', '=', $userId);
             };
         }
-
         // 联表获取组织列表及创建人信息
         $joinedGroup = GroupUserModel::alias('gu')
             ->join('group g', 'gu.group_id = g.id')
@@ -111,10 +120,23 @@ class Group extends BaseController
             ->select();
 
         $data = [];
-        //遍历joinedGroup,重新组织存储到formattedData
         foreach ($joinedGroup as $item) {
-            //检查组织状态是否为1或者用户是否为组织的创建者
+
             if ($item['status'] == 1 || $item['creator_id'] == $userId) {
+
+                $members = GroupUserModel::where('group_id', $item['group_id'])->select();
+
+                $memberData = [];
+                foreach ($members as $member) {
+                    $userList = UserModel::where('id', $member['user_id'])->find();
+
+                    $memberData[] = [
+                        'user_id' => $userList['id'],
+                        'nickname' => $userList['nickname'],
+                        'avatar' => $userList['avatar']
+                    ];
+                }
+
                 $data[] = [
                     'group_id' => $item['group_id'],
                     'status' => $item['status'],
@@ -124,7 +146,8 @@ class Group extends BaseController
                     'creator' => [
                         'nickname' => $item['creator_nickname'],
                         'avatar' => $item['creator_avatar']
-                    ]
+                    ],
+                    'members' => $memberData
                 ];
             }
         }
@@ -170,7 +193,7 @@ class Group extends BaseController
             Common::checkByTokenUid($token, $creatorId);
             validate(GroupValidate::class)->scene('update')->check($param);
         } catch (\Exception $e) {
-            return $this->exception($e->getMessage());
+            return $this->Catchexception($e->getCode(),$e->getMessage());
         }
 
         $data = GroupModel::where(['id' => $id, 'creator_id' => $creatorId])->update(
@@ -215,7 +238,7 @@ class Group extends BaseController
             Common::checkByGroup($groupId, $creatorId);
 
         } catch (\Exception $e) {
-            return $this->exception($e->getMessage());
+            return $this->Catchexception($e->getCode(),$e->getMessage());
         }
 
         $user = UserModel::where('username', $memberEmail)->find();
@@ -308,7 +331,7 @@ class Group extends BaseController
             Common::checkByTokenUid($token, $creatorId);
             Common::checkByGroup($groupId, $creatorId);
         } catch (\Exception $e) {
-            return $this->exception($e->getMessage());
+            return $this->Catchexception($e->getCode(),$e->getMessage());
         }
 
         $group = GroupModel::where(['creator_id' => $creatorId, 'id' => $groupId])->find();
@@ -357,7 +380,7 @@ class Group extends BaseController
             Common::checkByGroup($groupId, $creatorId);
 
         } catch (\Exception $e) {
-            return $this->exception($e->getMessage());
+            return $this->Catchexception($e->getCode(),$e->getMessage());
         }
 
         $group = GroupModel::where('id', $groupId)->find();

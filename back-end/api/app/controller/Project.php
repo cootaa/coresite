@@ -10,7 +10,6 @@ namespace app\controller;
 
 use app\BaseController;
 use think\facade\Request;
-use app\controller\Common;
 use app\model\Project as ProjectModel;
 use app\validate\Project as ProjectValidate;
 use app\model\Group as GroupModel;
@@ -45,7 +44,7 @@ class Project extends BaseController
             Common::checkByTokenUid($token, $creatorId);
             validate(ProjectValidate::class)->scene('create')->check($param);
         } catch (\Exception $e) {
-            return $this->exception($e->getMessage());
+            return $this->Catchexception($e->getCode(), $e->getMessage());
         }
 
         $project = ProjectModel::where(['creator_id' => $creatorId, 'group_id' => $groupId, 'name' => $name])->find();
@@ -113,11 +112,20 @@ class Project extends BaseController
      */
     public function list()
     {
+        $header = Request::header();
+
+        $token = $header['token'];
         $page = input('get.page') ?? '1';
         $size = input('get.size') ?? '999';
         $name = input('get.name') ?? '';
         $userId = input('get.user_id') ?? '';
         $groupId = input('get.group_id') ?? '';
+
+        try {
+            \app\controller\Common::checkByTokenUid($token, $userId);
+        } catch (\Exception $e) {
+            return $this->Catchexception($e->getCode(), $e->getMessage());
+        }
 
         $where = [];
         if ($name != '') {
@@ -152,7 +160,7 @@ class Project extends BaseController
                 'group_id' => $item['group_id'],
                 'project_id' => $item['project_id'],
                 'user_id' => $item['user_id'],
-                'status'=>$item['status'],
+                'status' => $item['status'],
                 'project_info' => [
                     'name' => $item['project_name'],
                     'icon' => $item['project_icon'],
@@ -192,7 +200,7 @@ class Project extends BaseController
             Common::checkByProject($projectId, $creatorId);
             validate(ProjectValidate::class)->scene('update')->check($param);
         } catch (\Exception $e) {
-            return $this->exception($e->getMessage());
+            return $this->Catchexception($e->getCode(), $e->getMessage());
         }
 
         $projectList = ProjectModel::where(
@@ -242,7 +250,7 @@ class Project extends BaseController
             Common::checkByTokenUid($token, $creatorId);
             Common::checkByProject($projectId, $creatorId);
         } catch (\Exception $e) {
-            return $this->exception($e->getMessage());
+            return $this->Catchexception($e->getCode(), $e->getMessage());
         }
 
         $project = ProjectModel::where('id', $projectId)->find();
@@ -288,7 +296,7 @@ class Project extends BaseController
             Common::checkByProject($projectId, $creatorId);
 
         } catch (\Exception $e) {
-            return $this->exception($e->getMessage());
+            return $this->Catchexception($e->getCode(), $e->getMessage());
         }
 
         if ($memberId == $creatorId) {
@@ -388,7 +396,7 @@ class Project extends BaseController
             Common::checkByProject($projectId, $creatorId);
 
         } catch (\Exception $e) {
-            return $this->exception($e->getMessage());
+            return $this->Catchexception($e->getCode(), $e->getMessage());
         }
 
         $project = ProjectModel::where(['creator_id' => $creatorId, 'id' => $projectId, 'group_id' => $groupId])->find();

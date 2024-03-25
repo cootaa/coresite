@@ -38,16 +38,10 @@ class File extends BaseController
             Common::checkByTokenUid($token, $creatorId);
         } catch (\Exception $e) {
 
-            return $this->exception($e->getMessage());
+            return $this->Catchexception($e->getCode(), $e->getMessage());
         }
 
-        $file = FileModel::where(
-            [
-                'folder_id' => $folderId,
-                'creator_id' => $creatorId,
-                'id' => $fileId
-            ]
-        )->find();
+        $file = FileModel::where(['folder_id' => $folderId, 'creator_id' => $creatorId, 'id' => $fileId])->find();
 
         if (!$file) {
             return $this->exception(setLang('FileNotfound'));
@@ -57,21 +51,15 @@ class File extends BaseController
             return $this->exception(setLang('NoPermission'));
         }
 
-        $data = FileModel::where(
-            [
-                'folder_id' => $folderId,
-                'creator_id' => $creatorId,
-                'id' => $fileId
-            ])->update
-        ([
-            'name' => $name,
-            'update_time' => $timeStamp
-        ]);
+        $data = FileModel::where(['folder_id' => $folderId, 'creator_id' => $creatorId, 'id' => $fileId])
+            ->update(['name' => $name, 'update_time' => $timeStamp]);
+
         if (!$data) {
             return $this->exception(setLang('RenameError'));
         }
 
         $updateFile = FileModel::where('id', $fileId)->find();
+
         return $this->success($updateFile, setLang('RenameSuccess'));
     }
 
@@ -84,8 +72,19 @@ class File extends BaseController
      */
     public function list()
     {
+        $header = Request::header();
+
+        $token = $header['token'];
         $name = input('get.name') ?? '';
         $folderId = input('get.folder_id') ?? '';
+        $userId = input('get.user_id');
+
+        try {
+            Common::checkByTokenUid($token, $userId);
+        } catch (\Exception $e) {
+
+            return $this->Catchexception($e->getCode(), $e->getMessage());
+        }
 
         $where = [];
         if ($name != '') {
@@ -98,22 +97,21 @@ class File extends BaseController
 
         $fileList = FileModel::where($where)->select();
         foreach ($fileList as $k => $file) {
-
             // 确保$file是数组形式，如果是模型对象，转换为数组
             $fileData = $file->toArray();
 
             $userInfo = UserModel::where('id', $fileData['creator_id'])->find();
             if ($userInfo) {
-
                 $fileList[$k]['creator'] = [
                     'nickname' => $userInfo->nickname,
                     'avatar' => $userInfo->avatar,
                 ];
             }
         }
+
         $count = count($fileList);
-        return $this->success(
-            ['count' => $count, 'file_list' => $fileList]);
+
+        return $this->success(['count' => $count, 'file_list' => $fileList]);
     }
 
     /**
@@ -137,7 +135,7 @@ class File extends BaseController
         try {
             Common::checkByTokenUid($token, $creatorId);
         } catch (\Exception $e) {
-            return $this->exception($e->getMessage());
+            return $this->Catchexception($e->getCode(), $e->getMessage());
         }
 
         $folder = FileModel::where(['id' => $fileId, 'folder_id' => $folderId])->find();
@@ -154,6 +152,7 @@ class File extends BaseController
         if (!$delFolder) {
             return $this->exception(setLang('FileDeleteError'));
         }
+
         return $this->success(setLang('FileDeleteSuccess'));
     }
 
@@ -180,7 +179,7 @@ class File extends BaseController
         try {
             Common::checkByTokenUid($token, $creatorId);
         } catch (\Exception $e) {
-            return $this->exception($e->getMessage());
+            return $this->Catchexception($e->getCode(), $e->getMessage());
         }
 
         $file = FileModel::where('id', $fileId)->find();
@@ -244,7 +243,7 @@ class File extends BaseController
             \app\controller\common::checkbytokenuid($token, $creatorId);
             \app\controller\Common::checkUserMemory($token);
         } catch (\exception $e) {
-            return $this->exception($e->getmessage());
+            return $this->Catchexception($e->getCode(), $e->getMessage());
         }
 
         $filesdata = $param['files'];
@@ -278,10 +277,11 @@ class File extends BaseController
                 if (!$data) {
                     return $this->exception(setlang('filesaveerror'));
                 }
-
             } else {
                 $existingfile = filemodel::where(['folder_id' => $filedata['folder_id'], 'name' => $filedata['name'], 'format' => $filedata['format']])->find();
+
                 $newFileName = $filedata['name'] . $filedata['format'];
+
                 if ($existingfile) {
                     $duplicatefiles[] = $newFileName;// 将重复文件加入数组
                     continue; // 跳过当前文件，继续处理下一个文件
@@ -326,8 +326,8 @@ class File extends BaseController
     /**
      *文件下载
      *
-     * @param int $userId ; //用户id
-     * @param int $fileId ; //文件id
+     * @param int $userId //用户id
+     * @param int $fileId //文件id
      * @return  array
      */
     public function getFileUrl()

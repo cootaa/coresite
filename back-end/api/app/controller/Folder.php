@@ -29,9 +29,19 @@ class Folder extends BaseController
      */
     public function list()
     {
+        $header = Request::header();
+
+        $token = $header['token'];
         $folderName = input('get.name') ?? '';
         $projectId = input('get.project_id');
         $folderId = input('get.folder_id') ?? '';
+        $userId = input('get.user_id');
+
+        try {
+            Common::checkByTokenUid($token, $userId);
+        } catch (\Exception $e) {
+            return $this->Catchexception($e->getCode(), $e->getMessage());
+        }
 
         $where[] = ['project_id', '=', $projectId];
         $folderList = FolderModel::where($where);
@@ -40,12 +50,7 @@ class Folder extends BaseController
         }
 
         if ($folderId != '') {
-            $folderList = $folderList->where(
-                [
-                    'parent_id' != null,
-                    'id' => $folderId
-                ]
-            );
+            $folderList = $folderList->where(['parent_id' != null, 'id' => $folderId]);
         }
 
         $result = [];
@@ -79,10 +84,7 @@ class Folder extends BaseController
             $result[] = $folderData;
         }
 
-        return $this->success([
-            'folder_info' => $result[0],
-            'count' => $count
-        ]);
+        return $this->success(['folder_info' => $result[0], 'count' => $count]);
     }
 
 
@@ -110,7 +112,7 @@ class Folder extends BaseController
             Common::checkByTokenUid($token, $creatorId);
             validate(FolderValidate::class)->scene('create')->check($param);
         } catch (\Exception $e) {
-            return $this->exception($e->getMessage());
+            return $this->Catchexception($e->getCode(), $e->getMessage());
         }
 
         $project = ProjectModel::where(['id' => $projectId])->find();
@@ -160,7 +162,7 @@ class Folder extends BaseController
             Common::checkByTokenUid($token, $creatorId);
             validate(FolderValidate::class)->scene('rename')->check($param);
         } catch (\Exception $e) {
-            return $this->exception($e->getMessage());
+            return $this->Catchexception($e->getCode(), $e->getMessage());
         }
 
         $folder = FolderModel::where(['id' => $folderId, 'creator_id' => $creatorId, 'project_id' => $projectId])
@@ -199,7 +201,7 @@ class Folder extends BaseController
         try {
             Common::checkByTokenUid($token, $creatorId);
         } catch (\Exception $e) {
-            return $this->exception($e->getMessage());
+            return $this->Catchexception($e->getCode(), $e->getMessage());
         }
 
         $folder = FolderModel::where(['id' => $folderId, 'creator_id' => $param['creator_id']])->find();
@@ -268,7 +270,7 @@ class Folder extends BaseController
         try {
             Common::checkByTokenUid($token, $creatorId);
         } catch (\Exception $e) {
-            return $this->exception($e->getMessage());
+            return $this->Catchexception($e->getCode(), $e->getMessage());
         }
 
         $folder = FolderModel::where(['project_id' => $projectId, 'id' => $folderId, 'creator_id' => $creatorId])->find();
@@ -329,6 +331,4 @@ class Folder extends BaseController
 
         return $folderData;
     }
-
-
 }

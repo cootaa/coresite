@@ -40,7 +40,7 @@ class Common extends BaseController
     /**
      * JWT配置
      */
-    const key = 'JWT-key@CoreSite';
+    private static $key;
     const expTime = 7200;
 
     public function __construct()
@@ -55,6 +55,7 @@ class Common extends BaseController
         self::$accessKeySecret = Env::get('ALIYUN_OOS.ACCESSKEYSCECRET');
         self::$endpoint = Env::get('ALIYUN_OOS.ENDPOINT');
         self::$bucket = Env::get('ALIYUN_OOS.BUCKET');
+        self::$key = Env::get('JWT.JWT_KEY');
     }
 
 
@@ -157,22 +158,26 @@ class Common extends BaseController
     {
         $nowTime = time();
         try {
-            $token['iss'] = ''; //签发者 可选
-            $token['aud'] = ''; //接收该JWT的一方，可选
-            $token['iat'] = $nowTime; //签发时间
-            $token['nbf'] = $nowTime + 30; //某个时间点后才能访问
-            $token['exp'] = $nowTime + self::expTime; //token过期时间,这里设置2个小时
-            $token['uid'] = ''; //自定义参数
-            $token['name'] = ''; //自定义参数
-            $token['mobile'] = ''; //自定义参数
-            $json = JWT::encode($token, self::key, "HS256");
+            $token['iss'] = '';
+            $token['aud'] = '';
+            $token['iat'] = $nowTime;
+            $token['nbf'] = $nowTime + 30;
+            $token['exp'] = $nowTime + self::expTime;
+            $token['uid'] = '';
+            $token['name'] = '';
+            $token['mobile'] = '';
+
+            // 将密钥转换为字符串类型,不转会报错,无法生成
+            $keyString = (string)self::$key;
+
+            $json = JWT::encode($token, $keyString, "HS256");
             return $json;
-        } catch (\Firebase\JWT\ExpiredException $e) {//签名不正确
+        } catch (\Firebase\JWT\ExpiredException $e) {
             $returndata['code'] = "104";
             $returndata['msg'] = $e->getMessage();
             $returndata['data'] = "";
             return json_encode($returndata);
-        } catch (\Exception $e) {//其他错误
+        } catch (\Exception $e) {
             $returndata['code'] = "199";
             $returndata['msg'] = $e->getMessage();
             $returndata['data'] = "";
@@ -189,7 +194,8 @@ class Common extends BaseController
     {
         try {
             JWT::$leeway = 60; //当前时间减去60，把时间留点余地
-            $decoded = JWT::decode($jwt, new Key(self::key, 'HS256')); //HS256方式，这里要和签发的时候对应
+            $keyString = (string)self::$key;// 将密钥转换为字符串类型,不转会报错,无法生成
+            $decoded = JWT::decode($jwt, new Key($keyString, 'HS256')); //HS256方式，这里要和签发的时候对应
             $arr = (array)$decoded;
             $returndata['code'] = "200";
             $returndata['msg'] = setLang('SUCCESS');
@@ -332,8 +338,6 @@ class Common extends BaseController
     /**
      * 检测用户上传文件是否超出规定内存
      *
-     * 通过用户的身份验证token，检查用户上传的文件总大小是否超出规定的内存限制。
-     *
      * @param string $token 用户token
      * @return bool
      * @throws \Exception
@@ -358,5 +362,4 @@ class Common extends BaseController
         }
         return true;
     }
-
 }

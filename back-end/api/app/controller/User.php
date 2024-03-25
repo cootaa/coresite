@@ -141,7 +141,7 @@ class User extends BaseController
 
 
     /**
-     *离开组织
+     *用户离开组织
      *
      * @param int $userId //用户id
      * @param int $groupId //组织id
@@ -160,7 +160,7 @@ class User extends BaseController
             Common::checkByTokenUid($token, $userId);
 
         } catch (\Exception $e) {
-            return $this->exception($e->getMessage());
+            return $this->Catchexception($e->getCode(), $e->getMessage());
         }
 
         $data = GroupUserModel::where(['group_id' => $groupId, 'user_id' => $userId])->delete();
@@ -172,7 +172,7 @@ class User extends BaseController
     }
 
     /**
-     *离开项目
+     *用户离开项目
      *
      * @param int $userId //用户id
      * @param int $projectId //项目id
@@ -193,7 +193,7 @@ class User extends BaseController
         try {
             Common::checkByTokenUid($token, $userId);
         } catch (\Exception $e) {
-            return $this->exception($e->getMessage());
+            return $this->Catchexception($e->getCode(), $e->getMessage());
         }
 
         $data = ProjectUserModel::where(['project_id' => $projectId, 'user_id' => $userId])->delete();
@@ -241,7 +241,7 @@ class User extends BaseController
         try {
             Common::checkByTokenUid($token, $userId);
         } catch (\Exception $e) {
-            return $this->exception($e->getMessage());
+            return $this->Catchexception($e->getCode(), $e->getMessage());
         }
 
         $data = UserModel::where('id', $userId)->field('id,username,nickname,avatar,bio,create_time,setting')->find();
@@ -249,7 +249,7 @@ class User extends BaseController
         $settingParts = explode('/', $data['setting']);
         $lang = $settingParts[0];
         $theme = $settingParts[1];
-        $size = $settingParts[2];
+        $side = $settingParts[2];
         $frame = $settingParts[3];
 
         $newData = $data->toArray();
@@ -257,7 +257,7 @@ class User extends BaseController
             [
                 'lang' => $lang,
                 'theme' => $theme,
-                'size' => $size,
+                'side' => $side,
                 'frame' => $frame,
             ];
 
@@ -285,7 +285,7 @@ class User extends BaseController
             Common::checkByTokenUid($token, $userId);
             validate(UserValidate::class)->scene('update')->check($param);
         } catch (\Exception $e) {
-            return $this->exception($e->getMessage());
+            return $this->Catchexception($e->getCode(), $e->getMessage());
         }
 
         $userMsg = UserModel::where('id', $userId)->find();
@@ -293,7 +293,7 @@ class User extends BaseController
         $settingParts = explode('/', $userMsg['setting']);
         $oldLang = $settingParts[0];
         $oldTheme = $settingParts[1];
-        $oldSize = $settingParts[2];
+        $oldSide = $settingParts[2];
         $oldFrame = $settingParts[3];
 
         $avatar = $param['avatar'] ?? $userMsg['avatar'];
@@ -301,7 +301,7 @@ class User extends BaseController
         $bio = $param['bio'] ?? $userMsg['bio'];
         $lang = $param['lang'] ?? $oldLang;
         $theme = $param['theme'] ?? $oldTheme;
-        $size = $param['size'] ?? $oldSize;
+        $side = $param['side'] ?? $oldSide;
         $frame = $param['frame'] ?? $oldFrame;
 
 
@@ -309,7 +309,7 @@ class User extends BaseController
             'avatar' => $avatar,
             'nickname' => $nickName,
             'bio' => $bio,
-            'setting' => $lang . '/' . $theme . '/' . $size . '/' . $frame,
+            'setting' => $lang . '/' . $theme . '/' . $side . '/' . $frame,
         ]);
 
         $updateUser = UserModel::where('id', $userId)->field('id,username,nickname,avatar,bio,limited,create_time,setting')->find();

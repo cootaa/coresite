@@ -11,9 +11,6 @@ namespace app\controller;
 use app\BaseController;
 use app\model\Notice as NoticeModel;
 use app\validate\Notice as NoticeValidate;
-use app\model\Group as GroupModel;
-use app\model\User as UserModel;
-use think\Exception;
 use think\facade\Request;
 use function app\setLang;
 
@@ -41,7 +38,7 @@ class Notice extends BaseController
             Common::checkByGroup($groupId, $creatorId);
             validate(NoticeValidate::class)->scene('create')->check($param);
         } catch (\Exception $e) {
-            return $this->exception($e->getMessage());
+            return $this->Catchexception($e->getCode(), $e->getMessage());
         }
 
         $content = $param['content'];
@@ -74,9 +71,19 @@ class Notice extends BaseController
      */
     public function list()
     {
+        $header = Request::header();
+
+        $token = $header['token'];
         $groupId = input('get.group_id');
         $page = input('get.page') ?? 1;
         $size = input('get.size') ?? 10;
+        $userId = input('get.user_id');
+
+        try {
+            Common::checkByTokenUid($token, $userId);
+        } catch (\Exception $e) {
+            return $this->Catchexception($e->getCode(), $e->getMessage());
+        }
 
         $data = NoticeModel::where(['group_id' => $groupId, 'status' => 1])->page($page, $size)->order('update_time', 'desc')->select();
 
@@ -107,7 +114,7 @@ class Notice extends BaseController
             Common::checkByGroup($groupId, $creatorId);
             validate(NoticeValidate::class)->scene('update')->check($param);
         } catch (\Exception $e) {
-            return $this->exception($e->getMessage());
+            return $this->Catchexception($e->getCode(), $e->getMessage());
         }
 
         $noticeId = $param['notice_id'];
@@ -153,7 +160,7 @@ class Notice extends BaseController
             Common::checkByTokenUid($token, $creatorId);
             Common::checkByGroup($groupId, $creatorId);
         } catch (\Exception $e) {
-            return $this->exception($e->getMessage());
+            return $this->Catchexception($e->getCode(), $e->getMessage());
         }
 
         $data = NoticeModel::where('id', $noticeId)->update(

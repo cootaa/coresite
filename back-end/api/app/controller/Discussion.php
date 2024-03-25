@@ -27,7 +27,7 @@ class Discussion extends BaseController
      * @param int $groupId //组织id
      * @param int $creatorId //创建人id
      * @param string $content //内容
-     * @param string $tilte //内容
+     * @param string $tilte //标题
      * @return array
      */
     public function create()
@@ -45,7 +45,7 @@ class Discussion extends BaseController
             Common::checkByTokenUid($token, $creatorId);
             validate(DiscussionValidate::class)->scene('create')->check($param);
         } catch (\Exception $e) {
-            return $this->exception($e->getMessage());
+            return $this->Catchexception($e->getCode(),$e->getMessage());
         }
 
         $group = GroupModel::where('id', $groupId)->find();
@@ -66,7 +66,6 @@ class Discussion extends BaseController
                 'title' => $title,
                 'content' => $content,
                 'update_time' => time()
-
             ]
         );
 
@@ -85,17 +84,26 @@ class Discussion extends BaseController
      * @param string $tilte //标题
      * @param int $userId //用户id
      * @param int $page //页码
-     * @param int $size //m每页数量
+     * @param int $size //每页数量
      * @return array
      */
     public function  list()
     {
+        $header = Request::header();
+
+        $token = $header['token'];
         $groupId = input('get.group_id');
         $content = input('get.content') ?? '';
         $title = input('get.title') ?? '';
         $userId = input('get.user_id');
         $page = input('get.page') ?? 1;
         $size = input('get.size') ?? 10;
+
+        try {
+            Common::checkByTokenUid($token, $userId);
+        } catch (\Exception $e) {
+            return $this->Catchexception($e->getCode(),$e->getMessage());
+        }
 
         $where = [];
 
@@ -137,6 +145,7 @@ class Discussion extends BaseController
                             'nickname' => $commentUserList['nickname'],
                             'avatar' => $commentUserList['avatar'],
                         ];
+
                         $commentUserIds[] = $comment['user_id'];
                     }
                 }
@@ -145,15 +154,13 @@ class Discussion extends BaseController
             $discussionItem['comment_user'] = $comments;
             $discussionItem['comment_count'] = count($commentUser); // 计算评论总数
             $discussionItem['user_count'] = count($commentUserIds); // 去重获取的评论用户数量
-
         }
 
         if (!$discussion) {
             return $this->exception(setLang('GetDiscussionListError'));
         }
+
         return $this->success(['page' => $page, 'size' => $size, 'discussion_list' => $discussion]);
-
-
     }
 
     /**
@@ -163,7 +170,7 @@ class Discussion extends BaseController
      * @param string $content //内容
      * @param string $tilte //标题
      * @param int $discussionId //讨论id
-     * @param int $creatorId //用户id
+     * @param int $creatorId //创建人id
      * @return array
      */
     public function update()
@@ -180,7 +187,7 @@ class Discussion extends BaseController
             Common::checkByTokenUid($token, $creatorId);
             validate(DiscussionValidate::class)->scene('update')->check($param);
         } catch (\Exception $e) {
-            return $this->exception($e->getMessage());
+            return $this->Catchexception($e->getCode(),$e->getMessage());
         }
 
         $checkUser = GroupUserModel::where(['group_id' => $groupId, 'user_id' => $creatorId])->find();
@@ -189,7 +196,6 @@ class Discussion extends BaseController
         }
 
         $discussion = DiscussionModel::where(['id' => $discussionId, 'status' => 1])->find();
-
         if (!$discussion) {
             return $this->exception(setLang('DiscussionNotFound'));
         }
@@ -201,12 +207,7 @@ class Discussion extends BaseController
             return $this->exception(setLang('NoPermission'));
         }
 
-        $data = DiscussionModel::where('id', $discussionId)->update(
-            [
-                'title' => $title,
-                'content' => $content,
-                'update_time' => time(),
-            ]);
+        $data = DiscussionModel::where('id', $discussionId)->update(['title' => $title, 'content' => $content, 'update_time' => time(),]);
 
         if (!$data) {
             return $this->exception(setLang('DiscussionUpdateError'));
@@ -214,9 +215,7 @@ class Discussion extends BaseController
 
         $update = DiscussionModel::where('id', $discussionId)->find();
 
-
         return $this->success($update, setLang('DiscussionUpdateSuccess'));
-
     }
 
     /**
@@ -224,7 +223,7 @@ class Discussion extends BaseController
      *
      * @param int $groupId //组织id
      * @param int $discussionId //讨论id
-     * @param int $creatorId //用户id
+     * @param int $creatorId //创建人id
      * @return array
      */
     public function del()
@@ -240,11 +239,11 @@ class Discussion extends BaseController
         try {
             Common::checkByTokenUid($token, $creatorId);
         } catch (\Exception $e) {
-            return $this->exception($e->getMessage());
+            return $this->Catchexception($e->getCode(),$e->getMessage());
         }
+
         $group = GroupModel::where('id', $groupId)->find();
         $discussion = DiscussionModel::where('id', $discussionId)->find();
-
         if (!$group) {
             return $this->exception(setLang('GroupNotFound'));
         }
@@ -253,12 +252,7 @@ class Discussion extends BaseController
             return $this->exception(setLang('NotCreatorOrGroupCreatorCanNotDelete'));
         }
 
-        $delete = DiscussionModel::where('id', $discussionId)->update(
-            [
-                'status' => 0,
-                'delete_time' => time()
-            ]
-        );
+        $delete = DiscussionModel::where('id', $discussionId)->update(['status' => 0, 'delete_time' => time()]);
         if (!$delete) {
             return $this->exception(setLang('DeleteError'));
         }
@@ -291,12 +285,14 @@ class Discussion extends BaseController
             Common::checkByTokenUid($token, $userId);
             validate(DiscussionCommentValidate::class)->scene('create')->check($param);
         } catch (\Exception $e) {
-            return $this->exception($e->getMessage());
+            return $this->Catchexception($e->getCode(),$e->getMessage());
         }
+
         $checkMember = GroupUserModel::where(['group_id' => $groupId, 'user_id' => $userId])->find();
         if (!$checkMember) {
             return $this->exception(setLang('NoPermission'));
         }
+
         $discussion = DiscussionModel::where(['id' => $discussionId, 'status' => 1])->find();
         if (!$discussion) {
             return $this->exception(setLang('DiscussionNotFound'));
@@ -309,9 +305,11 @@ class Discussion extends BaseController
                 'group_id' => $groupId,
                 'discussion_id' => $discussionId,
             ]);
+
         if (!$data) {
             return $this->exception(setLang('CommentReleaseError'));
         }
+
         return $this->success($data, setLang('CommentReleaseSuccess'));
     }
 
@@ -329,6 +327,9 @@ class Discussion extends BaseController
      */
     public function CommentList()
     {
+        $header = Request::header();
+
+        $token = $header['token'];
         $groupId = input('get.group_id');
         $discussionId = input('get.discussion_id');
         $userId = input('get.user_id');
@@ -337,12 +338,15 @@ class Discussion extends BaseController
         $order = input('get.order') ?? 'asc';
 
         try {
+            Common::checkByTokenUid($token,$userId);
             Common::checkByGroup($groupId, $userId);
         } catch (\Exception $e) {
-            return $this->exception($e->getMessage());
+            return $this->Catchexception($e->getCode(),$e->getMessage());
         }
 
-        $data = DiscussionCommentModel::where(['discussion_id' => $discussionId, 'status' => 1])->page($page, $size)->order('create_time', $order)->select();
+        $data = DiscussionCommentModel::where(['discussion_id' => $discussionId, 'status' => 1])
+            ->page($page, $size)
+            ->order('create_time', $order)->select();
 
         foreach ($data as &$commentList) {
             $userList = UserModel::where('id', $commentList['user_id'])->find();
@@ -352,11 +356,12 @@ class Discussion extends BaseController
                     'avatar' => $userList['avatar'],
                 ];
         }
+
         if (!$data) {
             return $this->exception(setLang('CommentListGetError'));
         }
-        return $this->success($data);
 
+        return $this->success($data);
     }
 
     /**
@@ -382,7 +387,7 @@ class Discussion extends BaseController
         try {
             Common::checkByTokenUid($token, $userId);
         } catch (\Exception $e) {
-            return $this->exception($e->getMessage());
+            return $this->Catchexception($e->getCode(),$e->getMessage());
         }
 
         $group = GroupModel::where('id', $groupId)->find();
@@ -392,12 +397,8 @@ class Discussion extends BaseController
             return $this->exception(setLang('NotYouSelfCreatorOrGroupCreatorCanNotDelete'));
         }
 
-        $delete = DiscussionCommentModel::where(['discussion_id' => $discussionId, 'id' => $commentId])->update(
-            [
-                'status' => 0,
-                'delete_time' => time()
-            ]
-        );
+        $delete = DiscussionCommentModel::where(['discussion_id' => $discussionId, 'id' => $commentId])->update(['status' => 0, 'delete_time' => time()]);
+
         if (!$delete) {
             return $this->exception('CommentDeleteError');
         }
@@ -418,7 +419,6 @@ class Discussion extends BaseController
         $order = input('get.order') ?? 'asc';
 
         $discussion = DiscussionModel::where('id', $discussionId)->find();
-
         $creator = UserModel::where('id', $discussion['creator_id'])->field('nickname,avatar')->find();
 
         if (!$discussion) {
@@ -426,7 +426,6 @@ class Discussion extends BaseController
         }
 
         $comments = DiscussionCommentModel::where(['discussion_id' => $discussionId, 'status' => 1])->order('create_time', $order)->select();
-
         foreach ($comments as $comment) {
             $user = UserModel::where('id', $comment['user_id'])->find();
             $comment['comment_user'] =
@@ -435,6 +434,7 @@ class Discussion extends BaseController
                     'avatar' => $user['avatar']
                 ];
         }
+
         $discussion['creator'] = $creator;
         $discussion['comments'] = $comments;
         return $this->success($discussion);
