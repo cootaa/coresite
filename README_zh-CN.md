@@ -2,6 +2,10 @@
 
 版本: `beta1.0`
 
+![](https://img.shields.io/github/stars/cootaa/coresite?style=social)
+![](https://img.shields.io/github/watchers/cootaa/coresite?style=social)
+![](https://img.shields.io/github/forks/cootaa/coresite?color=green&style=social)
+
 [English Version](./README.md)
 
 ## 介绍
