@@ -1,0 +1,99 @@
+@import './group.less';
+@min-width: 320px;
+@max-width: 320px;
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-size: 14px;
+  background-color: var(--color-bg-1);
+  color: var(--color-text-1);
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased;
+}
+
+.arco-spin {
+  display: block !important;
+}
+
+.fill-window {
+  width: 100%;
+  height: 100vh;
+}
+
+.z-index-0 {
+  z-index: 0;
+}
+
+.opacity-60 {
+  opacity: 0.6;
+}
+
+.text-only1-line {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.text-left {
+  text-align: left;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.width-100 {
+  min-width: 100%;
+}
+
+.height-fill {
+  min-height: 100vh;
+}
+
+.setting-min-height {
+  min-height: 50vh;
+}
+
+.circle {
+  border-radius: 50%;
+}
+
+.center-min-width {
+  min-width: @min-width;
+}
+
+.center-max-width {
+  max-width: @max-width;
+}
+
+.justify-content-center {
+  justify-content: center;
+}
+
+.nomargin {
+  margin: 0 !important;
+}
+
+.outline-common(@size: 1px) {
+  border: @size solid var(--color-neutral-3);
+}
+
+.outline-primary(@size: 1px) {
+  border: @size solid rgb(var(--primary-6));
+}
+
+.create-modal {
+  max-width: 400px;
+}
