@@ -313,9 +313,7 @@ class User extends BaseController
         ]);
 
         $updateUser = UserModel::where('id', $userId)->field('id,username,nickname,avatar,bio,limited,create_time,setting')->find();
-        if (!$data) {
-            return $this->exception(setLang('UserUpdateError'));
-        }
+
         return $this->success($updateUser, setLang('UserUpdateSuccess'));
     }
 }

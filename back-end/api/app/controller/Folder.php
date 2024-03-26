@@ -14,6 +14,7 @@ use app\model\File as FileModel;
 use app\model\Folder as FolderModel;
 use app\model\Project as ProjectModel;
 use app\model\User as UserModel;
+use think\Route;
 use function app\setLang;
 use app\validate\Folder as FolderValidate;
 
@@ -194,7 +195,7 @@ class Folder extends BaseController
         $header = Request::header();
 
         $token = $header['token'];
-        $folderId = $param['folder_id'];
+        $folderIds = is_array($param['folder_id']) ? $param['folder_id'] : [$param['folder_id']];
         $parentId = $param['parent_id'];
         $creatorId = $param['creator_id'];
 
@@ -204,50 +205,51 @@ class Folder extends BaseController
             return $this->Catchexception($e->getCode(), $e->getMessage());
         }
 
-        $folder = FolderModel::where(['id' => $folderId, 'creator_id' => $param['creator_id']])->find();
+        foreach ($folderIds as $folderId) {
+            $folder = FolderModel::where(['id' => $folderId, 'creator_id' => $creatorId])->find();
 
-        if ($creatorId != $folder['creator_id']) {
-            return $this->exception(setLang('NoPermission'));
+            if (!$folder || $creatorId != $folder['creator_id']) {
+                return $this->exception(setLang('NoPermission'));
+            }
 
+            $parent = FolderModel::where('id', $parentId)->find();
+
+            if (!$parent) {
+                return $this->exception(setLang('FolderNotFound'));
+            }
+
+            if ($parent['parent_id'] == $folder['id']) {
+                return $this->exception(setLang('TargetFolderIsASubFolderOfTheSourceFolder'));
+            }
+
+            if ($folder['parent_id'] == $parent['id']) {
+                return $this->exception(setLang('FolderAlreadyExistsInTheCurrentFolder'));
+            }
+
+            $duplicateFolder = FolderModel::where('parent_id', $parentId)
+                ->where('name', $folder['name'])
+                ->where('id', '<>', $folderId)
+                ->find();
+
+            if ($duplicateFolder) {
+                return $this->exception(setLang('MoveToTheDestinationFolderWithDuplicateFolderNames'));
+            }
+
+            $folderRemove = FolderModel::where([
+                'id' => $folderId,
+                'creator_id' => $creatorId
+            ])->update([
+                'parent_id' => $parentId
+            ]);
+
+            if (!$folderRemove) {
+                return $this->exception(setLang('FolderRemoveError'));
+            }
         }
 
-        $parent = FolderModel::where('id', $parentId)->find();
-
-        if (!$parent) {
-            return $this->exception(setLang('FolderNotFound'));
-        }
-
-        if ($parent['parent_id'] == $folder['id']) {
-
-            return $this->exception(setLang('TargetFolderIsASubFolderOfTheSourceFolder'));
-        }
-
-        if ($folder['parent_id'] == $parent['id']) {
-            return $this->exception(setLang('FolderAlreadyExistsInTheCurrentFolder'));
-        }
-
-        //判断移动目标文件夹是否重复,是否覆盖
-        $duplicateFolder = FolderModel::where('parent_id', $parentId)
-            ->where('name', $folder['name'])
-            ->find();
-
-        if ($duplicateFolder && $duplicateFolder['id'] !== $folderId) {
-            return $this->exception(setLang('MoveToTheDestinationFolderWithDuplicateFolderNames'));
-        }
-
-        // 执行移动文件夹的操作
-        $folderRemove = FolderModel::where([
-            'id' => $folderId,
-            'creator_id' => $creatorId
-        ])->update([
-            'parent_id' => $parentId
-        ]);
-
-        if (!$folderRemove) {
-            return $this->exception(setLang('FolderRemoveError'));
-        }
         return $this->success(setLang('FolderRemoveSuccess'));
     }
+
 
     /**
      *删除文件夹
@@ -264,7 +266,7 @@ class Folder extends BaseController
 
         $token = $header['token'];
         $projectId = $param['project_id'];
-        $folderId = $param['folder_id'];
+        $folderIds = is_array($param['folder_id']) ? $param['folder_id'] : [$param['folder_id']];
         $creatorId = $param['creator_id'];
 
         try {
@@ -272,20 +274,25 @@ class Folder extends BaseController
         } catch (\Exception $e) {
             return $this->Catchexception($e->getCode(), $e->getMessage());
         }
+        foreach ($folderIds as $folderId) {
+            $folder = FolderModel::where(['project_id' => $projectId, 'id' => $folderId])->find();
+            if (!$folder) {
+                return $this->exception(setLang('FolderNotFound'));
+            }
+            if($folder['creator_id']!=$creatorId)
+            {
+                return $this->exception(setLang('NoPermission'));
+            }
 
-        $folder = FolderModel::where(['project_id' => $projectId, 'id' => $folderId, 'creator_id' => $creatorId])->find();
-        if (!$folder) {
-            return $this->exception(setLang('FolderNotFound'));
-        }
+            $file = FileModel::where('folder_id', $folderId)->find();
+            if ($file) {
+                return $this->exception(setLang('FolderHaveFileCanNotDelete'));
+            }
 
-        $file = FileModel::where('folder_id', $folderId)->find();
-        if ($file) {
-            return $this->exception(setLang('FolderHaveFileCanNotDelete'));
-        }
-
-        $delFolder = FolderModel::where(['project_id' => $projectId, 'id' => $folderId, 'creator_id' => $creatorId])->delete();
-        if (!$delFolder) {
-            return $this->exception(setLang('FolderDeleteError'));
+            $delFolder = FolderModel::where(['project_id' => $projectId, 'id' => $folderId, 'creator_id' => $creatorId])->delete();
+            if (!$delFolder) {
+                return $this->exception(setLang('FolderDeleteError'));
+            }
         }
         return $this->success(setLang('FolderDeleteSuccess'));
     }

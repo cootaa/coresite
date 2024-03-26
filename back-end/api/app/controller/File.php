@@ -130,7 +130,7 @@ class File extends BaseController
         $token = $header['token'];
         $folderId = $param['folder_id'];
         $creatorId = $param['creator_id'];
-        $fileId = $param['file_id'];
+        $fileIds = is_array($param['file_id'])?$param['file_id']:[$param['file_id']];
 
         try {
             Common::checkByTokenUid($token, $creatorId);
@@ -138,23 +138,32 @@ class File extends BaseController
             return $this->Catchexception($e->getCode(), $e->getMessage());
         }
 
-        $folder = FileModel::where(['id' => $fileId, 'folder_id' => $folderId])->find();
-        if (!$folder) {
-            return $this->exception(setLang('FileNotFound'));
-        }
+        foreach ($fileIds as $fileId) {
+            $file = FileModel::where('id', $fileId)
+                ->where('folder_id', $folderId)
+                ->find();
 
-        $file = FileModel::where('id', $fileId)->find();
-        if ($file['creator_id'] != $creatorId) {
-            return $this->exception(setLang('NoPermission'));
-        }
+            if (!$file) {
+                return $this->exception(setLang('FileNotFound'));
+            }
 
-        $delFolder = FileModel::where(['id' => $fileId, 'folder_id' => $folderId, 'creator_id' => $creatorId])->delete();
-        if (!$delFolder) {
-            return $this->exception(setLang('FileDeleteError'));
+            if($file['creator_id']!=$creatorId)
+            {
+                return $this->exception(setLang('NoPermission'));
+            }
+
+            $deleteCount = FileModel::where('id', $fileId)
+                ->where('folder_id', $folderId)
+                ->delete();
+
+            if ($deleteCount !== 1) {
+                return $this->exception(setLang('FileDeleteError'));
+            }
         }
 
         return $this->success(setLang('FileDeleteSuccess'));
     }
+
 
     /**
      *文件移动
@@ -173,7 +182,7 @@ class File extends BaseController
         $token = $header['token'];
         $folderId = $param['folder_id'];
         $creatorId = $param['creator_id'];
-        $fileId = $param['file_id'];
+        $fileIds = is_array($param['file_id'])?$param['file_id']:[$param['file_id']];
         $confirm = $param['confirm'] ?? 0;
 
         try {
@@ -182,42 +191,47 @@ class File extends BaseController
             return $this->Catchexception($e->getCode(), $e->getMessage());
         }
 
-        $file = FileModel::where('id', $fileId)->find();
-        if (!$file) {
-            return $this->exception(setLang('FileNotFound'));
-        }
+        foreach ($fileIds as $fileId) {
+            $file = FileModel::where('id', $fileId)->find();
 
-        if ($creatorId != $file['creator_id']) {
-            return $this->exception(setLang('NoPermission'));
-        }
+            if (!$file) {
+                return $this->exception(setLang('FileNotFound'));
+            }
 
-        $folder = FolderModel::where('id', $folderId)->find();
-        if (!$folder) {
-            return $this->exception(setLang('FolderNotFound'));
-        }
+            if($file['creator_id']!=$creatorId)
+            {
+                return $this->exception(setLang('NoPermission'));
+            }
 
-        //判断移动文件至目标文件夹内是否有重名文件
-        $duplicateFile = FileModel::where(['folder_id' => $folderId, 'name' => $file['name'], 'format' => $file['format']])->find();
-        if ($duplicateFile && $duplicateFile['id'] !== $fileId && $confirm == 0) {
-            return $this->success(\app\controller\Common::duplicate, setLang('MoveToTheDestinationFolderWithDuplicateFileNames'));
-        }
+            if ($creatorId != $file['creator_id']) {
+                return $this->exception(setLang('NoPermission'));
+            }
 
-        //如果确认覆盖文件
-        if ($confirm == 1) {
-            FileModel::where(['id' => $duplicateFile['id']])->delete();
-            $data = FileModel::where(['id' => $fileId, 'creator_id' => $creatorId,])
-                ->update(['folder_id' => $folderId]);
-        } else {
-            $data = FileModel::where(['id' => $fileId, 'creator_id' => $creatorId,])
-                ->update(['folder_id' => $folderId]);
-        }
+            $folder = FolderModel::where('id', $folderId)->find();
+            if (!$folder) {
+                return $this->exception(setLang('FolderNotFound'));
+            }
 
-        if (!$data) {
-            return $this->exception(setLang('FileRemoveError'));
+            // 判断移动文件至目标文件夹内是否有重名文件
+            $duplicateFile = FileModel::where(['folder_id' => $folderId, 'name' => $file['name'], 'format' => $file['format']])->find();
+            if ($duplicateFile && $duplicateFile['id'] !== $fileId && $confirm == 0) {
+                return $this->success(\app\controller\Common::duplicate, setLang('MoveToTheDestinationFolderWithDuplicateFileNames'));
+            }
+
+            // 如果确认覆盖文件
+            if ($confirm == 1) {
+                if ($duplicateFile) {
+                    FileModel::where('id', $duplicateFile['id'])->delete();
+                }
+                FileModel::where('id', $fileId)->update(['folder_id' => $folderId]);
+            } else {
+                FileModel::where('id', $fileId)->update(['folder_id' => $folderId]);
+            }
         }
 
         return $this->success(\app\controller\Common::cover, setLang('FileRemoveSuccess'));
     }
+
 
     /**
      *上传文件
