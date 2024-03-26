@@ -6,6 +6,8 @@
 ![](https://img.shields.io/github/watchers/cootaa/coresite?style=social)
 ![](https://img.shields.io/github/forks/cootaa/coresite?color=green&style=social)
 
+![](./docs/zh-CN/home.png)
+
 [English Version](./README.md)
 
 ## 介绍

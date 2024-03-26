@@ -6,6 +6,8 @@ version: `beta1.0`
 ![](https://img.shields.io/github/watchers/cootaa/coresite?style=social)
 ![](https://img.shields.io/github/forks/cootaa/coresite?color=green&style=social)
 
+![](./docs/en-US/home.png)
+
 [中文版](./README_zh-CN.md)
 
 ## Introduction
